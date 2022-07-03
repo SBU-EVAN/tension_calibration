@@ -31,4 +31,4 @@ This is an interesting one. First, diagonalize the covariance matrix of one expe
 To do this we need joint chains for two experiments. The joint chains are sampled using MCMC with log-probability as the sum of log-priors and log-likelihoods.
 
 ## Goodness of Fit Degradation
-We use the pybobyqa optimizer to find the parameter vector $\theta_{max}$ at the global maximum of the posterior, then compute the likelihood at $\theta_{max} using the corresponding emulator.
+We use the pybobyqa optimizer to find the parameter vector $\theta$ at the global maximum of the posterior, then compute the likelihood at $\theta$ using the corresponding emulator.
