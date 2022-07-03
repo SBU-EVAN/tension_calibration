@@ -20,11 +20,15 @@ In the notebooks folder you can see examples of how to compute each tension metr
 ---
 
 # Implementation
+Within "notebooks/metrics.ipynb" you can find definitions of each of these metrics.
 ## Normalizing Flow
-Normalizing flows are implement in tensorflow as a chain of masked autoencoders and coordinate permutations. (More)
+Normalizing flows are implement in tensorflow as a chain of masked autoencoders and coordinate permutations. Since we are integrating over the entire parameter space the order of the parameters should not matter, but allowing the parameters to permute can allow the NN to learn more expressive densities. The NN is made with 2 hidden layers of $2d$ units (d is the dimension of the parameter space). The number of bijectors in the chain is also $2d$. These can be tuned as needed.
 
 ## Eigentension
+This is an interesting one. First, diagonalize the covariance matrix of one experiment and change to that basis. Determine if an eigenvector is "well measured" by taking the ratio of the variance in the posterior to the variance in the prior. Keep only the well-measured eigenvectors and compute any tension metric.
 
 ## Parameter Difference in Update Form
+To do this we need joint chains for two experiments. The joint chains are sampled using MCMC with log-probability as the sum of log-priors and log-likelihoods.
 
 ## Goodness of Fit Degradation
+We use the pybobyqa optimizer to find the parameter vector $\theta_{max}$ at the global maximum of the posterior, then compute the likelihood at $\theta_{max} using the corresponding emulator.
