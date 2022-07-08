@@ -6,7 +6,7 @@ To Do:
 - [x] Normalizing flow
 - [x] Eigentension
 - [x] Parameter difference in update form
-- [ ] Goodness of fit degredation (unexpected optimizer results)
+- [x] Goodness of fit degredation (global optimization using pybobyqa)
 
 To complete the calibration you will need to provide chains (on the order of 1-5k). I have used the following emulators to create these chains:
 - Cosmopower for CMB emulation. I have a version that uses Emcee instead of the GPU affine sampler used in the example.
