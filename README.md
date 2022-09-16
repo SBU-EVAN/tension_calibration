@@ -2,7 +2,7 @@
 Code to calibrate cosmological tensions.
 
 To Do:
-- [ ] Readme
+- [x] Readme
 - [x] Normalizing flow
 - [x] Eigentension
 - [x] Parameter difference in update form
@@ -16,6 +16,12 @@ To complete the calibration you will need to provide chains (on the order of 1-5
 The affine sampler, although fast, seems to leave many gaps in the parameter space. The GPU runs out of memory for chains longer than about 3000 samples. All in all, we cannot run chains long enough to let the walkers fully explore the parameter space.
 
 In the notebooks folder you can see examples of how to compute each tension metric as well as a proof-of-concept example for tension error analysis. The code is meant to simplify notebooks that require these to be computed repeatedly and to standardize the implementation of each metric for each data set.
+
+# Error codes.
+
+- $-1$: Metric was skipped due to being set to "False"
+- $-2$: Metric result was NaN or Inf
+- $-3$: One of the input chains was missing
 
 ---
 
