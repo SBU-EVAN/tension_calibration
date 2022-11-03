@@ -60,7 +60,7 @@ class chain:
             chain.makeSingle()
         return chain
     
-    def diff(self,boost=1):
+    def diff(self,boost=1,feedback=False):
         # self.chains = list/array of length 2
         # boost is a way to generate more samples if needed.
         # boost should be 1 unless testing
@@ -86,15 +86,16 @@ class chain:
         # print the running params so users can verify the params are recognized
         names_0 = chains[0].getParamNames().getRunningNames()
         names_1 = chains[1].getParamNames().getRunningNames()
-        print('\nParams in first chain:')
-        print(names_0)
-        print('\nParams in second chain:')
-        print(names_1)
         
-        # get common params
-        common_params = [param for param in names_0 if param in names_1]
-        print('\n Common params found:')
-        print(common_params)
+        common_params = [param for param in names_0 if param in names_1]         # get common params
+        
+        if feedback:
+            print('\nParams in first chain:')
+            print(names_0)
+            print('\nParams in second chain:')
+            print(names_1)
+            print('\n Common params found:')
+            print(common_params)
         
         # find the indices of the common parameters, accounts for different order
         idx0 = [names_0.index(param) for param in common_params]
@@ -115,8 +116,9 @@ class chain:
 
         N0 = len(chain0)
         N1 = len(chain1)
-        print('\nN1 = {}'.format(N0))
-        print('N2 = {}'.format(N1))
+        if feedback:
+            print('\nN1 = {}'.format(N0))
+            print('N2 = {}'.format(N1))
 
         # set up parameter diff arrays
         diff = np.zeros((N0*boost,len(idx0)),dtype=np.float32)

@@ -78,7 +78,7 @@ class MAF:
                  bijectors=None, 
                  base_dist=None, 
                  target_dist=None, 
-                 gauss_bijector = None
+                 gauss_bijector=None
                 ):
                 
         # sensible defaults
@@ -114,7 +114,7 @@ class MAF:
         new_data = bijector.inverse(data.astype(np.float32))
         return new_data,bijector
 
-    def train(self,data=None,batch_size=5000,n_epochs=100,feedback=True,val_split=0.1,learning_rate=0.01):
+    def train(self,data=None,batch_size=5000,n_epochs=100,feedback=False,val_split=0.1,learning_rate=0.01):
         if( data is None ):
             raise TypeError('Must specify data as MCSamples type')
             
@@ -183,7 +183,7 @@ class MAF:
         self.gauss_bijector = bij
         #return(target_distribution,bij)
 
-    def setup(self,feedback=True):
+    def setup(self,feedback=False):
         # Set up bijector MADE
         if(feedback):
             print('---   MADE info   ---')

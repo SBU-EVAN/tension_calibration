@@ -90,7 +90,7 @@ def prior_cov(chain=None,dictionary=None):
         
     return cov_prior
             
-def q_dmap(chain_a,chain_b,chain_ab,chain_prior=None,prior_dict=None,lkl_a=None,lkl_b=None,lkl_ab=None):
+def q_dmap(chain_a,chain_b,chain_ab,chain_prior=None,prior_dict=None,lkl_a=None,lkl_b=None,lkl_ab=None,feedback=False):
     # for data set a and b, 
     # chain_ab is the joint chain
     
@@ -118,7 +118,8 @@ def q_dmap(chain_a,chain_b,chain_ab,chain_prior=None,prior_dict=None,lkl_a=None,
         map_ab = max_a_post(chain_ab)
     except:
         try:
-            print('Using given likelihoods.')
+            if feedback:
+                print('Using given likelihoods.')
             map_a = lkl_a
             map_b = lkl_b
             map_ab = lkl_ab
@@ -126,19 +127,21 @@ def q_dmap(chain_a,chain_b,chain_ab,chain_prior=None,prior_dict=None,lkl_a=None,
             RuntimeError('No likelihoods found!')
     
     Q_DMAP = 2*(map_a+map_b-map_ab)
-    print('Q_DMAP = {:.5f}'.format(Q_DMAP))
+    if feedback:
+        print('Q_DMAP = {:.5f}'.format(Q_DMAP))
     
     # get the degrees of freedom
     
     d = neff_a + neff_b - neff_ab
-    print('dof = {:.5f}'.format(d))
+    if feedback:
+        print('dof = {:.5f}'.format(d))
     
     # compute n_sigma
     pte = scipy.stats.chi2.cdf(Q_DMAP, d)
     n_sigma = np.sqrt(2)*scipy.special.erfinv(pte)
     return n_sigma
 
-def eigentension(chain1,chain2,prior_lims=None):
+def eigentension(chain1,chain2,prior_lims=None,feedback=False):
     # get cov of chains
     param_names_1 = chain1.getParamNames().getRunningNames()
     param_names_2 = chain2.getParamNames().getRunningNames()
@@ -194,15 +197,17 @@ def eigentension(chain1,chain2,prior_lims=None):
 
     for i in range(len(r)):
         if( r[i]>100 ):
-            print('{} is robust!'.format(i))
             robust.append(i)
+            if feedback:
+                print('{} is robust!'.format(i))
      
     # make sure at least 2 robust eigenmodes so I can use normalizing flows
     if( len(robust)<2 ):
         add_vec = -1*np.sort(-1*r)[1]
         new_idx = np.where(r==add_vec)
-        print('adding the {} eigenvector to well-measured subspace'.format(new_idx[0]))
         robust.append(new_idx[0][0])
+        if feedback:
+            print('adding the {} eigenvector to well-measured subspace'.format(new_idx[0]))
         
     idx = [param_names_2.index(param) for param in common_params]
     s2 = chain2.samples[...,idx]
@@ -220,17 +225,19 @@ def eigentension(chain1,chain2,prior_lims=None):
     # difference chain
     chains = diff.chain()
     chains.chains = [chain1,chain2]
-    chains.diff()
+    chains.diff(feedback=feedback)
     
     # MAF
     maf = flow.MAF(len(chains.params))
-    maf.setup()
-    maf.train(chains.diff_chain,batch_size=int(n_samples/100))
+    maf.setup(feedback=feedback)
+    maf.train(chains.diff_chain,batch_size=int(n_samples/100),feedback=feedback)
     
     nsigma,high,low = tension.flow_significance(
                         maf.target_dist,
                         maf.gauss_bijector,
                         len(chains.params)
                         )
-    print(r"n_sigma = {:.5f} +{:.5f}/-{:.5f}".format(nsigma,high-nsigma,nsigma-low))
+    if feedback:
+        print(r"n_sigma = {:.5f} +{:.5f}/-{:.5f}".format(nsigma,high-nsigma,nsigma-low))
+        
     return nsigma,high,low
