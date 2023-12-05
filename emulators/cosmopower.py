@@ -51,7 +51,6 @@ class cosmopower:
                               ee_emu_model=ee_emu_model
                              )
         
-<<<<<<< HEAD
     def log_prob(self, theta):
         p=self.tf_planck.posterior(theta.astype(np.float32)).numpy()
         return p
@@ -59,12 +58,3 @@ class cosmopower:
     def log_lkl(self, theta):
         lkl = self.tf_planck.get_loglkl(theta.astype(np.float32)).numpy()
         return lkl
-=======
-        def log_prob(self, theta):
-            p=self.tf_planck.posterior(theta.astype(np.float32)).numpy()
-            return p
-    
-        def log_lkl(self, theta):
-            lkl = self.tf_planck.get_loglkl(theta.astype(np.float32)).numpy()
-            return lkl
->>>>>>> 3c82b715d6e59c9c7c02b61268f04b833ab1c65d

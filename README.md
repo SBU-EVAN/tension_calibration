@@ -1,6 +1,8 @@
 # Tension Calibration
 Code to calibrate cosmological tensions.
 
+Requires Tensorflow 2.10.0 and Tensorflow probability 0.12.0. tf-probability is very version sensitive.
+
 To Do:
 - [x] Readme
 - [x] Normalizing flow

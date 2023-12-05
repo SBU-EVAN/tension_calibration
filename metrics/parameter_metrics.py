@@ -25,7 +25,7 @@ def qudm(chain,update_chain,feedback=False):
     # difference tensors
     cov_diff = cov_A - cov_AB
     inv_cov_diff = np.linalg.inv(cov_diff)
-    mean_diff = mean_AB - mean_A
+    mean_diff = mean_A - mean_AB
     
     #find degrees of freedom
     rank = np.linalg.matrix_rank(cov_diff)
@@ -103,8 +103,8 @@ def q_dmap(chain_a,chain_b,chain_ab,chain_prior=None,prior_dict=None,lkl_a=None,
         cov_prior_ab = prior_cov(chain_ab,prior_dict)
         
         neff_a = N_eff(chain_a,prior_cov=cov_prior_a)
-        neff_b = N_eff(chain_a,prior_cov=cov_prior_a)
-        neff_ab = N_eff(chain_a,prior_cov=cov_prior_a)
+        neff_b = N_eff(chain_a,prior_cov=cov_prior_b)
+        neff_ab = N_eff(chain_a,prior_cov=cov_prior_ab)
 
     else:
         neff_a = N_eff(chain_a,prior=chain_prior)
@@ -148,7 +148,7 @@ def eigentension(chain1,chain2,prior_lims=None,feedback=False):
     common_params = [param for param in param_names_1 if param in param_names_2]
 
     cov_1 = chain1.cov(common_params)
-    evals1,evecs1 = np.linalg.eig(cov_1)
+    evals1,evecs1 = np.linalg.eigh(cov_1)
     
     # compute diagonal cov
     inv_evecs = np.linalg.inv(evecs1)
@@ -157,7 +157,7 @@ def eigentension(chain1,chain2,prior_lims=None,feedback=False):
     # get prior cov assumming hard prior.
     idx = [param_names_1.index(param) for param in common_params]
     samples = chain1.samples
-    cov_prior = np.zeros((len(idx),len(idx)))
+    # cov_prior = np.zeros((len(idx),len(idx)))
 
     vecs = samples[...,idx]
     pr_samples = []
@@ -165,40 +165,45 @@ def eigentension(chain1,chain2,prior_lims=None,feedback=False):
     for i in range(len(common_params)):
         name = common_params[i]
         # get prior limits
-        try:
-            amin = chain1.ranges.lower[name]
-        except:
-            amin = prior_lims[name][0]
-        try:
-            amax = chain1.ranges.upper[name]
-        except:
-            amax = prior_lims[name][1]
+        # try:
+        #     amin = chain1.ranges.lower[name]
+        # except:
+        #     amin = prior_lims[name][0]
+        # try:
+        #     amax = chain1.ranges.upper[name]
+        # except:
+        #     amax = prior_lims[name][1]
+        amin = prior_lims[name][0]
+        amax = prior_lims[name][1]
 
         # sample from prior
-        pr_samples.append(np.random.uniform(amin,amax,1000000))
-        cov_prior[i,i] = ((amax-amin)**2)/12
+        pr_samples.append(np.random.uniform(amin,amax,50000))
+        #cov_prior[i,i] = ((amax-amin)**2)/12
+
+    cov_prior = np.cov(pr_samples)
 
     #change to eigenbasis
-    t_pr_samples = pr_samples
+    # t_pr_samples = pr_samples
     t_pr_samples = np.linalg.inv(evecs1) @ pr_samples
     transformed_vecs=np.transpose(np.linalg.inv(evecs1) @ np.transpose(vecs))
 
     dcov_prior=inv_evecs @ cov_prior @ evecs1
     # variances
-    for i in range(len(common_params)):
-        cov_prior[i,i] = np.var(pr_samples[i])
+    # for i in range(len(common_params)):
+    #     cov_prior[i,i] = np.var(pr_samples[i])
         
     # get the ratio of variances
-    r = np.zeros(len(cov_prior))
+    r = np.zeros(len(dcov_prior))
     robust=[]
 
-    for i in range(len(cov_prior)):
-        r[i] = cov_prior[i,i]/d_cov[i,i]
+    for i in range(len(dcov_prior)):
+        r[i] = dcov_prior[i,i]/d_cov[i,i]
 
     for i in range(len(r)):
         if( r[i]>100 ):
             robust.append(i)
             if feedback:
+                print(f'{r[i]} is the ratio of the prior to the posterior variance in the {i}-th direction.')
                 print('{} is robust!'.format(i))
      
     # make sure at least 2 robust eigenmodes so I can use normalizing flows
@@ -210,8 +215,11 @@ def eigentension(chain1,chain2,prior_lims=None,feedback=False):
             print('adding the {} eigenvector to well-measured subspace'.format(new_idx[0]))
         
     idx = [param_names_2.index(param) for param in common_params]
+    print(idx)
     s2 = chain2.samples[...,idx]
     s2_proj = np.transpose(np.linalg.inv(evecs1) @ np.transpose(s2))
+    print(transformed_vecs[0,robust])
+    print(s2_proj[0,robust])
 
     well_measured_1 = s2_proj[...,robust]
     well_measured_2 = transformed_vecs[...,robust]
@@ -221,6 +229,9 @@ def eigentension(chain1,chain2,prior_lims=None,feedback=False):
     # now turn them into chains and use NF
     chain1 = getdist.mcsamples.MCSamples(samples=well_measured_1,names=['e'+str(i) for i in robust],label='chain1')
     chain2 = getdist.mcsamples.MCSamples(samples=well_measured_2,names=['e'+str(i) for i in robust],label='chain2')
+
+    chain1.saveAsText('eigen_chain1')
+    chain2.saveAsText('eigen_chain2')
     
     # difference chain
     chains = diff.chain()
